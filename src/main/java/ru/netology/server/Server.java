@@ -27,6 +27,7 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        executor.shutdown();
     }
 
     public void addHandler(String method, String path, Handler handler) {
