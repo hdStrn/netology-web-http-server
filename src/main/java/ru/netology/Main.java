@@ -1,11 +1,87 @@
 package ru.netology;
 
 import ru.netology.server.Server;
+import ru.netology.utils.ResponseUtils;
+import ru.netology.utils.TimeUtils;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class Main {
     public static void main(String[] args) {
         Server server = new Server();
-        server.startServer();
+
+        server.addHandler("GET", "/index.html",
+                (request, out) -> {
+                    Path filePath = Path.of(".", "/public", request.getUri());
+                    byte[] content = Files.readAllBytes(filePath);
+                    ResponseUtils.sendOkResponse(filePath, content, out);
+                });
+        server.addHandler("GET", "/classic.html",
+                (request, out) -> {
+                    Path filePath = Path.of(".", "/public", request.getUri());
+                    String content = Files.readString(filePath);
+                    byte[] newContent = content
+                            .replace("{time}", TimeUtils.getCurrentTime())
+                            .getBytes();
+                    ResponseUtils.sendOkResponse(filePath, newContent, out);
+                });
+        server.addHandler("GET", "/events.html",
+                (request, out) -> {
+                    Path filePath = Path.of(".", "/public", request.getUri());
+                    byte[] content = Files.readAllBytes(filePath);
+                    ResponseUtils.sendOkResponse(filePath, content, out);
+                });
+        server.addHandler("GET", "/events.js",
+                (request, out) -> {
+                    Path filePath = Path.of(".", "/public", request.getUri());
+                    byte[] content = Files.readAllBytes(filePath);
+                    ResponseUtils.sendOkResponse(filePath, content, out);
+                });
+        server.addHandler("GET", "/resources.html",
+                (request, out) -> {
+                    Path filePath = Path.of(".", "/public", request.getUri());
+                    byte[] content = Files.readAllBytes(filePath);
+                    ResponseUtils.sendOkResponse(filePath, content, out);
+                });
+        server.addHandler("GET", "/spring.png",
+                (request, out) -> {
+                    Path filePath = Path.of(".", "/public", request.getUri());
+                    byte[] content = Files.readAllBytes(filePath);
+                    ResponseUtils.sendOkResponse(filePath, content, out);
+                });
+        server.addHandler("GET", "/spring.svg",
+                (request, out) -> {
+                    Path filePath = Path.of(".", "/public", request.getUri());
+                    byte[] content = Files.readAllBytes(filePath);
+                    ResponseUtils.sendOkResponse(filePath, content, out);
+                });
+        server.addHandler("GET", "/styles.css",
+                (request, out) -> {
+                    Path filePath = Path.of(".", "/public", request.getUri());
+                    byte[] content = Files.readAllBytes(filePath);
+                    ResponseUtils.sendOkResponse(filePath, content, out);
+                });
+        server.addHandler("GET", "/links.html",
+                (request, out) -> {
+                    Path filePath = Path.of(".", "/public", request.getUri());
+                    byte[] content = Files.readAllBytes(filePath);
+                    ResponseUtils.sendOkResponse(filePath, content, out);
+                });
+        server.addHandler("GET", "/forms.html",
+                (request, out) -> {
+                    Path filePath = Path.of(".", "/public", request.getUri());
+                    byte[] content = Files.readAllBytes(filePath);
+                    ResponseUtils.sendOkResponse(filePath, content, out);
+                });
+        server.addHandler("GET", "/app.js",
+                (request, out) -> {
+                    Path filePath = Path.of(".", "/public", request.getUri());
+                    byte[] content = Files.readAllBytes(filePath);
+                    ResponseUtils.sendOkResponse(filePath, content, out);
+                });
+
+        server.listen();
     }
 }
 
