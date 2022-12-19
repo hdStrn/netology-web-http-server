@@ -10,15 +10,13 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class Processor implements Runnable {
 
     private static final byte[] REQUEST_LINE_DELIMITER = {'\r', '\n'};
     private static final byte[] HEADERS_DELIMITER = {'\r', '\n', '\r', '\n'};
+    private static final String URLENCODED = "Content-Type: application/x-www-form-urlencoded";
     private Socket socket;
     private Map<String, Map<String, Handler>> handlers;
     private Request request;
@@ -69,11 +67,11 @@ public class Processor implements Runnable {
 
         if (handler == null) {
             ResponseUtils.sendNotFound(out);
+            System.out.println(request + " handled with 404 error!");
         } else {
             handler.handle(request, out);
+            System.out.println(request + " handled!");
         }
-
-        System.out.println(request + " handled!");
     }
 
     private int processRequestLine(byte[] buffer, int read, BufferedOutputStream out) throws URISyntaxException {
@@ -120,8 +118,8 @@ public class Processor implements Runnable {
         return requestLineEnd + REQUEST_LINE_DELIMITER.length;
     }
 
-    private boolean processRequestHeaders (byte[] buffer, int read, int headersStart,
-                                      BufferedInputStream in, BufferedOutputStream out) throws IOException {
+    private boolean processRequestHeaders(byte[] buffer, int read, int headersStart,
+                                          BufferedInputStream in, BufferedOutputStream out) throws IOException {
         final var headersEnd = indexOf(buffer, HEADERS_DELIMITER, headersStart, read);
         if (headersEnd == -1) {
             ResponseUtils.sendBadRequest(out);
@@ -147,8 +145,25 @@ public class Processor implements Runnable {
             int bodyLength = Integer.parseInt(contentLength.get());
             byte[] bodyBytes = in.readNBytes(bodyLength);
             String body = new String(bodyBytes);
+
+            if (request.getHeaders().contains(URLENCODED)) {
+                Map<String, List<String>> postParams = new HashMap<>();
+                String[] params = body.split("&");
+                for (String param : params) {
+                    String[] prm = param.split("=");
+                    if (!postParams.containsKey(prm[0])) {
+                        postParams.put(prm[0], new ArrayList<>(List.of(prm[1])));
+                    } else {
+                        postParams.get(prm[0]).add(prm[1]);
+                    }
+                }
+                request.setPostParams(postParams);
+            }
+
             request.setBody(body);
         }
+
+
     }
 
     // from google guava with modifications
