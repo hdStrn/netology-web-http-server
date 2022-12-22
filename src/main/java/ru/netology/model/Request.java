@@ -1,11 +1,15 @@
 package ru.netology.model;
 
+import org.apache.commons.fileupload.RequestContext;
 import org.apache.http.NameValuePair;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-public class Request {
+public class Request implements RequestContext {
 
     private String method;
     private String path;
@@ -13,6 +17,7 @@ public class Request {
     private Map<String, List<String>> postParams;
     private List<String> headers;
     private String body;
+    private String boundary;
 
     public String getMethod() {
         return method;
@@ -62,6 +67,14 @@ public class Request {
         this.body = body;
     }
 
+    public String getBoundary() {
+        return boundary;
+    }
+
+    public void setBoundary(String boundary) {
+        this.boundary = boundary;
+    }
+
     public String getQueryParam(String name) {
         for (NameValuePair queryParam : getQueryParams()) {
             if (name.equals(queryParam.getName())) {
@@ -80,6 +93,25 @@ public class Request {
         return null;
     }
 
+    @Override
+    public String getCharacterEncoding() {
+        return "UTF-8";
+    }
+
+    @Override
+    public String getContentType() {
+        return "multipart/form-data, boundary=" + boundary;
+    }
+
+    @Override
+    public int getContentLength() {
+        return -1;
+    }
+
+    @Override
+    public InputStream getInputStream() {
+        return new ByteArrayInputStream(body.getBytes());
+    }
 
     @Override
     public String toString() {
