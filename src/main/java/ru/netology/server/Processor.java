@@ -1,5 +1,7 @@
 package ru.netology.server;
 
+import org.apache.commons.fileupload.*;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import ru.netology.model.Request;
@@ -17,6 +19,7 @@ public class Processor implements Runnable {
     private static final byte[] REQUEST_LINE_DELIMITER = {'\r', '\n'};
     private static final byte[] HEADERS_DELIMITER = {'\r', '\n', '\r', '\n'};
     private static final String URLENCODED = "Content-Type: application/x-www-form-urlencoded";
+    private static final String MULTIPART = "Content-Type: multipart/form-data";
     private Socket socket;
     private Map<String, Map<String, Handler>> handlers;
     private Request request;
@@ -145,25 +148,56 @@ public class Processor implements Runnable {
             int bodyLength = Integer.parseInt(contentLength.get());
             byte[] bodyBytes = in.readNBytes(bodyLength);
             String body = new String(bodyBytes);
+            String boundary = body.substring(2, body.indexOf('\n')).trim();
+            request.setBody(body);
 
             if (request.getHeaders().contains(URLENCODED)) {
-                Map<String, List<String>> postParams = new HashMap<>();
-                String[] params = body.split("&");
-                for (String param : params) {
-                    String[] prm = param.split("=");
-                    if (!postParams.containsKey(prm[0])) {
-                        postParams.put(prm[0], new ArrayList<>(List.of(prm[1])));
-                    } else {
-                        postParams.get(prm[0]).add(prm[1]);
+                processUrlEncodedBody(body);
+            } else if (request.getHeaders().contains(MULTIPART + "; boundary=" + boundary)) {
+                processMultipartBody(boundary);
+            }
+        }
+    }
+
+    private void processUrlEncodedBody(String body) {
+        Map<String, List<String>> postParams = new HashMap<>();
+        String[] params = body.split("&");
+        for (String param : params) {
+            String[] prm = param.split("=");
+            postParams.computeIfAbsent(prm[0], k -> new ArrayList<>()).add(prm[1]);
+            if (!postParams.containsKey(prm[0])) {
+                postParams.put(prm[0], new ArrayList<>(List.of(prm[1])));
+            } else {
+                postParams.get(prm[0]).add(prm[1]);
+            }
+        }
+        request.setPostParams(postParams);
+    }
+
+    private void processMultipartBody(String boundary) {
+        request.setBoundary(boundary);
+        Map<String, List<String>> postParams = new HashMap<>();
+        try {
+            FileItemFactory factory = new DiskFileItemFactory();
+            FileUpload upload = new FileUpload(factory);
+            List<FileItem> fileItems = upload.parseRequest(request);
+            for (FileItem fileItem : fileItems) {
+                if (fileItem.isFormField()) {
+                    postParams.computeIfAbsent(fileItem.getFieldName(), k -> new ArrayList<>()).add(fileItem.getString());
+                } else {
+                    // если файл, то сохраняем в корневую папку проекта
+                    String fileName = fileItem.getName();
+                    try {
+                        fileItem.write(new File(fileName));
+                    } catch (Exception e) {
+                        System.out.println("Cannot save file " + fileName + "!");
                     }
                 }
-                request.setPostParams(postParams);
             }
-
-            request.setBody(body);
+            request.setPostParams(postParams);
+        } catch (FileUploadException e) {
+            System.out.println("Cannot parse request!");
         }
-
-
     }
 
     // from google guava with modifications
