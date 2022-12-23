@@ -17,6 +17,12 @@ public class Main {
                     byte[] content = Files.readAllBytes(filePath);
                     ResponseUtils.sendOkResponse(filePath, content, out);
                 });
+        server.addHandler("POST", "/index.html",
+                (request, out) -> {
+                    Path filePath = Path.of(".", "/public", request.getPath());
+                    byte[] content = Files.readAllBytes(filePath);
+                    ResponseUtils.sendOkResponse(filePath, content, out);
+                });
         server.addHandler("GET", "/classic.html",
                 (request, out) -> {
                     Path filePath = Path.of(".", "/public", request.getPath());
