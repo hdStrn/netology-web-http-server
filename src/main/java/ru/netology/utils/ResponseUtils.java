@@ -23,4 +23,46 @@ public class ResponseUtils {
             e.printStackTrace();
         }
     }
+
+    public static void sendNotFound(BufferedOutputStream out) {
+        try {
+            out.write((
+                    "HTTP/1.1 404 Not Found\r\n" +
+                            "Content-Length: 0\r\n" +
+                            "Connection: close\r\n" +
+                            "\r\n"
+            ).getBytes());
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void sendBadRequest(BufferedOutputStream out) {
+        try {
+            out.write((
+                    "HTTP/1.1 403 Bad Request\r\n" +
+                            "Content-Length: 0\r\n" +
+                            "Connection: close\r\n" +
+                            "\r\n"
+            ).getBytes());
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void sendMethodNotAllowed(BufferedOutputStream out) {
+        try {
+            out.write((
+                    "HTTP/1.1 405 Method Not Allowed\r\n" +
+                            "Content-Length: 0\r\n" +
+                            "Connection: close\r\n" +
+                            "\r\n"
+            ).getBytes());
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
